@@ -1,1 +1,1 @@
-import{t as e}from"./assets/chunk-1VNLd2iN.js";var t=e((()=>{chrome.runtime.onInstalled.addListener(()=>{console.log(`Extension installed`)})}));export default t();
+(function(){chrome.runtime.onInstalled.addListener(()=>{console.log(`Extension installed`)})})();
