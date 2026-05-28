@@ -17,19 +17,61 @@ function getRequiredElement<T extends HTMLElement>(id: string): T {
 function renderAlgorithmStats(container: HTMLElement, algorithms: ScanAlgorithmSummary[]) {
   container.replaceChildren();
 
+  const maxMatchCount = Math.max(...algorithms.map((algorithm) => algorithm.matchCount), 1);
+
   for (const algorithm of algorithms) {
     const row = document.createElement("article");
+    row.setAttribute(
+      "aria-label",
+      `${algorithm.algorithm}, ${algorithm.matchCount} match, ${algorithm.executionTimeMs.toFixed(2)} ms`
+    );
+
+    const header = document.createElement("div");
+    header.className = "algorithm-header";
 
     const title = document.createElement("h3");
     title.textContent = algorithm.algorithm;
 
-    const matches = document.createElement("p");
-    matches.textContent = `${algorithm.matchCount} match`;
+    const matchCount = document.createElement("strong");
+    matchCount.className = "algorithm-match-count";
+    matchCount.textContent = `${algorithm.matchCount} match`;
 
-    const time = document.createElement("p");
-    time.textContent = `${algorithm.executionTimeMs.toFixed(2)} ms`;
+    const metrics = document.createElement("div");
+    metrics.className = "algorithm-metrics";
 
-    row.append(title, matches, time);
+    const timeMetric = document.createElement("div");
+    timeMetric.className = "algorithm-metric";
+
+    const timeLabel = document.createElement("span");
+    timeLabel.textContent = "Waktu";
+
+    const timeValue = document.createElement("strong");
+    timeValue.textContent = `${algorithm.executionTimeMs.toFixed(2)} ms`;
+
+    const comparisonMetric = document.createElement("div");
+    comparisonMetric.className = "algorithm-metric";
+
+    const comparisonLabel = document.createElement("span");
+    comparisonLabel.textContent = "Comparison";
+
+    const comparisonValue = document.createElement("strong");
+    comparisonValue.textContent =
+      typeof algorithm.comparisons === "number" ? String(algorithm.comparisons) : "-";
+
+    const barTrack = document.createElement("div");
+    barTrack.className = "algorithm-bar-track";
+
+    const barFill = document.createElement("span");
+    barFill.className = "algorithm-bar-fill";
+    barFill.style.width =
+      algorithm.matchCount > 0 ? `${Math.max(4, (algorithm.matchCount / maxMatchCount) * 100)}%` : "0";
+
+    header.append(title, matchCount);
+    timeMetric.append(timeLabel, timeValue);
+    comparisonMetric.append(comparisonLabel, comparisonValue);
+    metrics.append(timeMetric, comparisonMetric);
+    barTrack.appendChild(barFill);
+    row.append(header, metrics, barTrack);
     container.appendChild(row);
   }
 }
