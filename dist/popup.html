@@ -127,6 +127,60 @@
         background: #f9fafb;
       }
 
+      .keyword-chart {
+        display: grid;
+        max-height: 168px;
+        gap: 8px;
+        overflow-y: auto;
+        padding-right: 2px;
+      }
+
+      .keyword-row {
+        display: grid;
+        gap: 5px;
+        padding: 8px;
+        border-radius: 6px;
+        background: #f9fafb;
+      }
+
+      .keyword-row-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .keyword-name {
+        overflow: hidden;
+        color: #172026;
+        font-size: 12px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .keyword-count {
+        color: #344054;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .keyword-bar-track {
+        width: 100%;
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #edf1f5;
+      }
+
+      .keyword-bar-fill {
+        display: block;
+        height: 100%;
+        min-width: 7px;
+        border-radius: inherit;
+        background: #b42318;
+      }
+
       #actions-heading {
         position: absolute;
         width: 1px;

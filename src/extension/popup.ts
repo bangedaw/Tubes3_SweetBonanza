@@ -44,14 +44,42 @@ function renderKeywordStats(container: HTMLElement, keywords: KeywordFrequency[]
     return;
   }
 
-  const list = document.createElement("ol");
-  for (const keyword of keywords) {
-    const item = document.createElement("li");
-    item.textContent = `${keyword.keyword}: ${keyword.count}`;
-    list.appendChild(item);
+  const sortedKeywords = [...keywords].sort((first, second) => second.count - first.count);
+  const maxCount = sortedKeywords[0]?.count || 1;
+  const chart = document.createElement("div");
+  chart.className = "keyword-chart";
+
+  for (const keyword of sortedKeywords) {
+    const row = document.createElement("article");
+    row.className = "keyword-row";
+    row.setAttribute("aria-label", `${keyword.keyword}, ${keyword.count} kemunculan`);
+
+    const rowHeader = document.createElement("div");
+    rowHeader.className = "keyword-row-header";
+
+    const name = document.createElement("span");
+    name.className = "keyword-name";
+    name.textContent = keyword.keyword;
+    name.title = keyword.keyword;
+
+    const count = document.createElement("span");
+    count.className = "keyword-count";
+    count.textContent = String(keyword.count);
+
+    const barTrack = document.createElement("div");
+    barTrack.className = "keyword-bar-track";
+
+    const barFill = document.createElement("span");
+    barFill.className = "keyword-bar-fill";
+    barFill.style.width = `${Math.max(4, (keyword.count / maxCount) * 100)}%`;
+
+    rowHeader.append(name, count);
+    barTrack.appendChild(barFill);
+    row.append(rowHeader, barTrack);
+    chart.appendChild(row);
   }
 
-  container.appendChild(list);
+  container.appendChild(chart);
 }
 
 function renderPopup(stats: ScanStatistics, statusText: string) {
