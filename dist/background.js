@@ -1,0 +1,1 @@
+import{t as e}from"./assets/chunk-D9-fqq9M.js";var t=e((()=>{chrome.runtime.onInstalled.addListener(()=>{console.log(`Extension installed`)})}));export default t();
