@@ -1,32 +1,7 @@
-type AlgorithmSummary = {
-  name: string;
-  matchCount: number;
-  executionTimeMs: number;
-};
+import { EMPTY_SCAN_STATISTICS } from "../storage/statsStore";
+import type { KeywordFrequency, ScanAlgorithmSummary, ScanStatistics } from "../storage/statsStore";
 
-type KeywordSummary = {
-  keyword: string;
-  count: number;
-};
-
-type PopupStats = {
-  totalMatches: number;
-  algorithms: AlgorithmSummary[];
-  keywords: KeywordSummary[];
-  statusText: string;
-};
-
-const fallbackStats: PopupStats = {
-  totalMatches: 0,
-  statusText: "Belum ada hasil scan realtime. Data akan muncul setelah integrasi storage.",
-  algorithms: [
-    { name: "KMP", matchCount: 0, executionTimeMs: 0 },
-    { name: "Boyer-Moore", matchCount: 0, executionTimeMs: 0 },
-    { name: "Regex", matchCount: 0, executionTimeMs: 0 },
-    { name: "Weighted-Levenshtein", matchCount: 0, executionTimeMs: 0 },
-  ],
-  keywords: [],
-};
+const fallbackStatusText = "Belum ada hasil scan realtime. Data akan muncul setelah integrasi storage.";
 
 function getRequiredElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -36,14 +11,14 @@ function getRequiredElement<T extends HTMLElement>(id: string): T {
   return element as T;
 }
 
-function renderAlgorithmStats(container: HTMLElement, algorithms: AlgorithmSummary[]) {
+function renderAlgorithmStats(container: HTMLElement, algorithms: ScanAlgorithmSummary[]) {
   container.replaceChildren();
 
   for (const algorithm of algorithms) {
     const row = document.createElement("article");
 
     const title = document.createElement("h3");
-    title.textContent = algorithm.name;
+    title.textContent = algorithm.algorithm;
 
     const matches = document.createElement("p");
     matches.textContent = `${algorithm.matchCount} match`;
@@ -56,7 +31,7 @@ function renderAlgorithmStats(container: HTMLElement, algorithms: AlgorithmSumma
   }
 }
 
-function renderKeywordStats(container: HTMLElement, keywords: KeywordSummary[]) {
+function renderKeywordStats(container: HTMLElement, keywords: KeywordFrequency[]) {
   container.replaceChildren();
 
   if (keywords.length === 0) {
@@ -76,15 +51,15 @@ function renderKeywordStats(container: HTMLElement, keywords: KeywordSummary[]) 
   container.appendChild(list);
 }
 
-function renderPopup(stats: PopupStats) {
-  getRequiredElement<HTMLElement>("scan-status").textContent = stats.statusText;
+function renderPopup(stats: ScanStatistics, statusText: string) {
+  getRequiredElement<HTMLElement>("scan-status").textContent = statusText;
   getRequiredElement<HTMLElement>("total-matches").textContent = String(stats.totalMatches);
   renderAlgorithmStats(getRequiredElement("algorithm-stats"), stats.algorithms);
-  renderKeywordStats(getRequiredElement("keyword-stats"), stats.keywords);
+  renderKeywordStats(getRequiredElement("keyword-stats"), stats.keywordFrequencies);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  renderPopup(fallbackStats);
+  renderPopup(EMPTY_SCAN_STATISTICS, fallbackStatusText);
 
   getRequiredElement<HTMLButtonElement>("rescan-button").addEventListener("click", () => {
     getRequiredElement<HTMLElement>("scan-status").textContent =
