@@ -36,3 +36,65 @@ export const EMPTY_SCAN_STATISTICS: ScanStatistics = {
     { algorithm: "Weighted-Levenshtein", matchCount: 0, executionTimeMs: 0 },
   ],
 };
+
+type ChromeStorageLocal = {
+  get: (keys: string, callback: (items: Record<string, unknown>) => void) => void;
+};
+
+type ChromeRuntime = {
+  lastError?: {
+    message?: string;
+  };
+};
+
+type ChromeApi = {
+  runtime?: ChromeRuntime;
+  storage?: {
+    local?: ChromeStorageLocal;
+  };
+};
+
+function getChromeApi(): ChromeApi | undefined {
+  return (globalThis as { chrome?: ChromeApi }).chrome;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isScanStatistics(value: unknown): value is ScanStatistics {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.totalMatches === "number" &&
+    Array.isArray(value.keywordFrequencies) &&
+    Array.isArray(value.algorithms) &&
+    (typeof value.scannedAt === "string" || value.scannedAt === null) &&
+    (typeof value.pageUrl === "string" || value.pageUrl === null) &&
+    (typeof value.pageTitle === "string" || value.pageTitle === null)
+  );
+}
+
+export function readScanStatistics(): Promise<ScanStatistics | null> {
+  const chromeApi = getChromeApi();
+  const storage = chromeApi?.storage?.local;
+
+  if (!storage) {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve, reject) => {
+    storage.get(SCAN_STATISTICS_STORAGE_KEY, (items) => {
+      const errorMessage = chromeApi?.runtime?.lastError?.message;
+      if (errorMessage) {
+        reject(new Error(errorMessage));
+        return;
+      }
+
+      const storedValue = items[SCAN_STATISTICS_STORAGE_KEY];
+      resolve(isScanStatistics(storedValue) ? storedValue : null);
+    });
+  });
+}

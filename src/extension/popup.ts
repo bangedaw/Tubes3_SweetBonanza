@@ -1,7 +1,10 @@
-import { EMPTY_SCAN_STATISTICS } from "../storage/statsStore";
+import { EMPTY_SCAN_STATISTICS, readScanStatistics } from "../storage/statsStore";
 import type { KeywordFrequency, ScanAlgorithmSummary, ScanStatistics } from "../storage/statsStore";
 
 const fallbackStatusText = "Belum ada hasil scan realtime. Data akan muncul setelah integrasi storage.";
+const loadedStatusText = "Statistik scan terakhir berhasil dimuat.";
+const loadingStatusText = "Memuat statistik scan terakhir...";
+const errorStatusText = "Statistik belum dapat dimuat dari storage.";
 
 function getRequiredElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -58,11 +61,18 @@ function renderPopup(stats: ScanStatistics, statusText: string) {
   renderKeywordStats(getRequiredElement("keyword-stats"), stats.keywordFrequencies);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  renderPopup(EMPTY_SCAN_STATISTICS, fallbackStatusText);
+document.addEventListener("DOMContentLoaded", async () => {
+  renderPopup(EMPTY_SCAN_STATISTICS, loadingStatusText);
 
   getRequiredElement<HTMLButtonElement>("rescan-button").addEventListener("click", () => {
     getRequiredElement<HTMLElement>("scan-status").textContent =
       "Rescan belum terhubung ke content script.";
   });
+
+  try {
+    const storedStats = await readScanStatistics();
+    renderPopup(storedStats ?? EMPTY_SCAN_STATISTICS, storedStats ? loadedStatusText : fallbackStatusText);
+  } catch {
+    renderPopup(EMPTY_SCAN_STATISTICS, errorStatusText);
+  }
 });
