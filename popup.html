@@ -1,7 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SweetBonanza Judol Detector</title>
+  </head>
   <body>
-    <h1>Test, This is Sweet Bonanza</h1>
+    <main id="popup-root" aria-label="Statistik Judol Detector">
+      <header>
+        <p>SweetBonanza</p>
+        <h1>Judol Detector</h1>
+        <p id="scan-status">Menampilkan data contoh popup.</p>
+      </header>
+
+      <section aria-labelledby="total-heading">
+        <h2 id="total-heading">Total Keyword Ditemukan</h2>
+        <strong id="total-matches">0</strong>
+      </section>
+
+      <section aria-labelledby="algorithm-heading">
+        <h2 id="algorithm-heading">Statistik Algoritma</h2>
+        <div id="algorithm-stats" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="keyword-heading">
+        <h2 id="keyword-heading">Perbandingan Keyword</h2>
+        <div id="keyword-stats" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="actions-heading">
+        <h2 id="actions-heading">Kontrol</h2>
+        <button id="rescan-button" type="button">Rescan Halaman</button>
+        <label>
+          <input id="ocr-toggle" type="checkbox" disabled />
+          OCR gambar
+        </label>
+      </section>
+    </main>
 
     <script type="module" src="src/extension/popup.ts"></script>
   </body>
