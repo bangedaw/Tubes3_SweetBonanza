@@ -1,7 +1,356 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SweetBonanza Judol Detector</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #172026;
+        background: #f6f7f9;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 360px;
+        min-height: 480px;
+        margin: 0;
+        background: #f6f7f9;
+      }
+
+      #popup-root {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      header {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dde3ea;
+      }
+
+      header p,
+      section p,
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      header p:first-child {
+        margin-bottom: 2px;
+        color: #b42318;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
+      #scan-status {
+        margin-top: 6px;
+        color: #667085;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid #dde3ea;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      h2 {
+        color: #344054;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      h3 {
+        color: #172026;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      #total-matches {
+        color: #b42318;
+        font-size: 32px;
+        line-height: 1;
+      }
+
+      #scan-metadata {
+        display: grid;
+        gap: 8px;
+      }
+
+      .metadata-row {
+        display: grid;
+        gap: 2px;
+        padding: 8px;
+        border-radius: 6px;
+        background: #f9fafb;
+      }
+
+      .metadata-label {
+        color: #667085;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .metadata-value {
+        overflow: hidden;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #algorithm-stats {
+        display: grid;
+        gap: 8px;
+      }
+
+      #algorithm-stats article {
+        display: grid;
+        gap: 7px;
+        padding: 8px;
+        border-radius: 6px;
+        background: #f9fafb;
+      }
+
+      .algorithm-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .algorithm-match-count {
+        color: #b42318;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .algorithm-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .algorithm-metric {
+        display: grid;
+        gap: 2px;
+      }
+
+      .algorithm-metric span {
+        color: #667085;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .algorithm-metric strong {
+        overflow: hidden;
+        color: #344054;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .algorithm-bar-track {
+        width: 100%;
+        height: 6px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #edf1f5;
+      }
+
+      .algorithm-bar-fill {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: #175cd3;
+      }
+
+      #algorithm-stats p,
+      #keyword-stats,
+      label {
+        color: #475467;
+        font-size: 12px;
+      }
+
+      #keyword-stats ol {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      #keyword-stats p {
+        padding: 8px;
+        border-radius: 6px;
+        background: #f9fafb;
+      }
+
+      .keyword-chart {
+        display: grid;
+        max-height: 168px;
+        gap: 8px;
+        overflow-y: auto;
+        padding-right: 2px;
+      }
+
+      .keyword-row {
+        display: grid;
+        gap: 5px;
+        padding: 8px;
+        border-radius: 6px;
+        background: #f9fafb;
+      }
+
+      .keyword-row-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .keyword-name {
+        overflow: hidden;
+        color: #172026;
+        font-size: 12px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .keyword-count {
+        color: #344054;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .keyword-bar-track {
+        width: 100%;
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #edf1f5;
+      }
+
+      .keyword-bar-fill {
+        display: block;
+        height: 100%;
+        min-width: 7px;
+        border-radius: inherit;
+        background: #b42318;
+      }
+
+      #actions-heading {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      section[aria-labelledby="actions-heading"] {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+      }
+
+      button {
+        min-height: 36px;
+        border: 0;
+        border-radius: 6px;
+        background: #b42318;
+        color: #ffffff;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #912018;
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid #175cd3;
+        outline-offset: 2px;
+      }
+
+      label {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        white-space: nowrap;
+      }
+
+      #ocr-status {
+        grid-column: 1 / -1;
+        color: #667085;
+        font-size: 11px;
+      }
+    </style>
+  </head>
   <body>
-    <h1>Test, This is Sweet Bonanza</h1>
+    <main id="popup-root" aria-label="Statistik Judol Detector">
+      <header>
+        <p>SweetBonanza</p>
+        <h1>Judol Detector</h1>
+        <p id="scan-status">Menampilkan data contoh popup.</p>
+      </header>
+
+      <section aria-labelledby="total-heading">
+        <h2 id="total-heading">Total Keyword Ditemukan</h2>
+        <strong id="total-matches">0</strong>
+      </section>
+
+      <section aria-labelledby="metadata-heading">
+        <h2 id="metadata-heading">Scan Terakhir</h2>
+        <div id="scan-metadata" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="algorithm-heading">
+        <h2 id="algorithm-heading">Statistik Algoritma</h2>
+        <div id="algorithm-stats" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="keyword-heading">
+        <h2 id="keyword-heading">Perbandingan Keyword</h2>
+        <div id="keyword-stats" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="actions-heading">
+        <h2 id="actions-heading">Kontrol</h2>
+        <button id="rescan-button" type="button">Rescan Halaman</button>
+        <label>
+          <input id="ocr-toggle" type="checkbox" />
+          OCR gambar
+        </label>
+        <p id="ocr-status">OCR nonaktif.</p>
+      </section>
+    </main>
 
     <script type="module" src="src/extension/popup.ts"></script>
   </body>

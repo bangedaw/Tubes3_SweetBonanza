@@ -1,0 +1,27 @@
+{
+  "name": "tubes3_sweetbonanza",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bangedaw/Tubes3_SweetBonanza.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/bangedaw/Tubes3_SweetBonanza/issues"
+  },
+  "homepage": "https://github.com/bangedaw/Tubes3_SweetBonanza#readme",
+  "devDependencies": {
+    "@types/chrome": "^0.1.42",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14"
+  }
+}
