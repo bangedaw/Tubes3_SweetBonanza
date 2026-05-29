@@ -259,6 +259,8 @@ function persistScanStatistics(statistics: ScanStatistics) {
 
 function resetStatistics() {
   wordFrequencies.clear();
+  ocrWordFrequencies.clear();
+  processedScreenshotSegments.clear();
   algorithmExecTimes.clear();
   algorithmMatchCounts.clear();
   algorithmComparisons.clear();
@@ -953,8 +955,12 @@ function performScan() {
   stopMutationObserver();
   try {
     clearHighlights();
+    clearOcrImageEffects();
     resetStatistics();
     highlightMatches();
+    if (currentOcrEnabled) {
+      scheduleOcrScan(0);
+    }
   }
   catch (error) {
     console.error("Gagal melakukan scan halaman: ", error);
@@ -974,5 +980,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 performScan();
-highlightMatches();
 void initializeBonusFeatures();

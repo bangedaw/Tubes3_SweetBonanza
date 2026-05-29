@@ -64,7 +64,8 @@ Jika extension baru saja di-reload, refresh tab halaman target agar content scri
    - metadata scan terakhir,
    - statistik per algoritma,
    - perbandingan frekuensi keyword,
-   - toggle OCR gambar.
+   - toggle OCR gambar,
+   - toggle blur teks.
 
 ## Fitur Saat Ini
 
@@ -75,7 +76,11 @@ Jika extension baru saja di-reload, refresh tab halaman target agar content scri
 - Popup statistik hasil scan.
 - Penyimpanan statistik scan ke `chrome.storage.local`.
 - Refresh popup saat data statistik berubah.
-- Toggle status OCR gambar tersimpan di storage.
+- Tombol rescan halaman dari popup.
+- Dukungan halaman dinamis melalui MutationObserver.
+- OCR gambar dengan Tesseract.js.
+- Blur gambar dan teks untuk hasil deteksi.
+- Toggle OCR gambar dan blur teks tersimpan di storage.
 
 ## Ringkasan Algoritma
 
@@ -111,10 +116,9 @@ Tubes3_SweetBonanza/
 
 ## Known Limitation
 
-- Tombol rescan pada popup sudah mengirim request, tetapi handler rescan di content script belum tersedia.
-- Highlight lama belum dibersihkan saat rescan karena mekanisme clear highlight belum diimplementasikan.
-- OCR gambar baru berupa toggle dan penyimpanan status; proses OCR gambar belum diimplementasikan.
-- Google Search dan beberapa halaman modern dapat mengubah DOM secara dinamis setelah scan awal.
+- OCR gambar membutuhkan waktu lebih lama dibanding scan teks dan hasilnya bergantung pada kualitas gambar.
+- Beberapa gambar cross-origin, thumbnail terlalu kecil, atau teks dekoratif dapat gagal dibaca OCR.
+- `npm test` masih berupa placeholder; verifikasi utama dilakukan lewat build dan uji manual di browser.
 
 ## Troubleshooting
 
