@@ -42,6 +42,21 @@ type ChromeStorageLocal = {
   set: (items: Record<string, unknown>, callback?: () => void) => void;
 };
 
+type ChromeStorageChange = {
+  oldValue?: unknown;
+  newValue?: unknown;
+};
+
+type ChromeStorageChangedListener = (
+  changes: Record<string, ChromeStorageChange>,
+  areaName: string
+) => void;
+
+type ChromeStorageOnChanged = {
+  addListener: (callback: ChromeStorageChangedListener) => void;
+  removeListener: (callback: ChromeStorageChangedListener) => void;
+};
+
 type ChromeRuntime = {
   lastError?: {
     message?: string;
@@ -52,6 +67,7 @@ type ChromeApi = {
   runtime?: ChromeRuntime;
   storage?: {
     local?: ChromeStorageLocal;
+    onChanged?: ChromeStorageOnChanged;
   };
 };
 
@@ -119,4 +135,32 @@ export function writeScanStatistics(statistics: ScanStatistics): Promise<void> {
       resolve();
     });
   });
+}
+
+export function subscribeScanStatistics(
+  callback: (statistics: ScanStatistics | null) => void
+): () => void {
+  const chromeApi = getChromeApi();
+  const onChanged = chromeApi?.storage?.onChanged;
+
+  if (!onChanged) {
+    return () => undefined;
+  }
+
+  const listener: ChromeStorageChangedListener = (changes, areaName) => {
+    if (areaName !== "local") {
+      return;
+    }
+
+    const changedStatistics = changes[SCAN_STATISTICS_STORAGE_KEY];
+    if (!changedStatistics) {
+      return;
+    }
+
+    const nextValue = changedStatistics.newValue;
+    callback(isScanStatistics(nextValue) ? nextValue : null);
+  };
+
+  onChanged.addListener(listener);
+  return () => onChanged.removeListener(listener);
 }
