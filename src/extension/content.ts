@@ -177,8 +177,12 @@ function highlightMatches() {
     {
       acceptNode: (node) => {
         if (!node.nodeValue?.trim()) return NodeFilter.FILTER_REJECT;
-        const parent = node.parentNode as HTMLElement;
-        if (parent && ["SCRIPT", "STYLE", "NOSCRIPT", "MARK"].includes(parent.nodeName)) {
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        if (parent.closest("script, style, noscript, mark, input, textarea, code, pre")) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.isContentEditable) {
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_ACCEPT;
