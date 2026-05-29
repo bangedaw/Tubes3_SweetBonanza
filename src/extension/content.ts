@@ -290,5 +290,12 @@ function performScan() {
   finally {
     isScanning = false;
   }
-
 }
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "SWEETBONANZA_RESCAN") {
+    performScan();
+    sendResponse({ status: "success" });
+  }
+  return true;
+});
