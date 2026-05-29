@@ -257,6 +257,19 @@ function persistScanStatistics(statistics: ScanStatistics) {
   });
 }
 
+function resetStatistics() {
+  wordFrequencies.clear();
+  algorithmExecTimes.clear();
+  algorithmMatchCounts.clear();
+  algorithmComparisons.clear();
+  algorithmNames.forEach(algorithm => {
+    algorithmExecTimes.set(algorithm, 0);
+    algorithmMatchCounts.set(algorithm, 0);
+    algorithmComparisons.set(algorithm, 0);
+  }
+  );
+}
+
 function getImageSource(image: HTMLImageElement): string {
   return image.currentSrc || image.src;
 }
@@ -782,8 +795,12 @@ function highlightMatches() {
     {
       acceptNode: (node) => {
         if (!node.nodeValue?.trim()) return NodeFilter.FILTER_REJECT;
-        const parent = node.parentNode as HTMLElement;
-        if (parent && ["SCRIPT", "STYLE", "NOSCRIPT", "MARK"].includes(parent.nodeName)) {
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        if (parent.closest("script, style, noscript, mark, input, textarea, code, pre")) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.isContentEditable) {
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_ACCEPT;
@@ -859,5 +876,103 @@ function highlightMatches() {
   textHighlightMatchTotal = totalUniqueMatches;
   persistCurrentScanStatistics();
 }
+
+function clearHighlights() {
+  const highlightedElements = Array.from(document.querySelectorAll(".sweetbonanza-highlighted-word"));
+  if (highlightedElements.length == 0) return;
+
+  const parentToNormalize = new Set<HTMLElement>();
+  for (const mark of highlightedElements) {
+    const parent = mark.parentElement;
+    if (parent) {
+      parentToNormalize.add(parent);
+      const textNode = document.createTextNode(mark.textContent || "");
+      parent.replaceChild(textNode, mark);
+    }
+  }  
+  for (const parent of parentToNormalize) {
+    parent.normalize();
+  }
+  tooltip.style.display = "none";
+}
+
+let mutationObserver: MutationObserver | null = null;
+let debounceTimeout: number | null = null;
+
+function startMutationObserver() {
+  if (mutationObserver) return;
+  mutationObserver = new MutationObserver((mutations) => {
+    let hasValidMutation = false;
+    for (const mutation of mutations) {
+      let isSelfMutation = false;
+      if (mutation.type === "childList") {
+        mutation.addedNodes.forEach(node => {
+          if (node instanceof HTMLElement && (node.classList.contains("sweetbonanza-highlighted-word") || node.querySelector(".sweetbonanza-highlighted-word"))) {
+            isSelfMutation = true;
+          }
+        });
+      }
+      if (!isSelfMutation) {
+        hasValidMutation = true;
+        break;
+      }
+    } 
+    if (hasValidMutation) {
+      if (debounceTimeout !== null) {
+        clearTimeout(debounceTimeout);
+      }
+      debounceTimeout = window.setTimeout(() => {
+        performScan();
+      }, 500);
+    }
+  });
+  mutationObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+}
+
+function stopMutationObserver() {
+  if (mutationObserver) {
+    mutationObserver.disconnect();
+    mutationObserver = null;
+  }
+  if (debounceTimeout !== null) {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = null;
+  }
+}
+
+
+let isScanning = false;
+
+function performScan() {
+  if (isScanning) return;
+  isScanning = true;
+  stopMutationObserver();
+  try {
+    clearHighlights();
+    resetStatistics();
+    highlightMatches();
+  }
+  catch (error) {
+    console.error("Gagal melakukan scan halaman: ", error);
+  }
+  finally {
+    isScanning = false;
+    startMutationObserver();
+  }
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "SWEETBONANZA_RESCAN") {
+    performScan();
+    sendResponse({ status: "success" });
+  }
+  return true;
+});
+
+performScan();
 highlightMatches();
 void initializeBonusFeatures();
