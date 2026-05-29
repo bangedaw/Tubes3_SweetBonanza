@@ -1,4 +1,5 @@
 import { EMPTY_SCAN_STATISTICS, readScanStatistics, subscribeScanStatistics } from "../storage/statsStore";
+import { readOcrEnabled, writeOcrEnabled } from "../storage/settingsStore";
 import type { KeywordFrequency, ScanAlgorithmSummary, ScanStatistics } from "../storage/statsStore";
 
 const fallbackStatusText = "Belum ada hasil scan realtime. Data akan muncul setelah integrasi storage.";
@@ -9,6 +10,9 @@ const updatedStatusText = "Statistik scan terbaru diterima.";
 const rescanRequestStatusText = "Meminta content script melakukan rescan...";
 const rescanSentStatusText = "Permintaan rescan sudah dikirim ke halaman aktif.";
 const rescanUnavailableStatusText = "Rescan belum tersedia pada halaman aktif.";
+const ocrEnabledStatusText = "OCR aktif. Gambar akan diproses setelah modul OCR tersedia.";
+const ocrDisabledStatusText = "OCR nonaktif.";
+const ocrErrorStatusText = "Status OCR belum dapat disimpan.";
 
 type ActiveTab = {
   id?: number;
@@ -194,8 +198,14 @@ function renderPopup(stats: ScanStatistics, statusText: string) {
   renderKeywordStats(getRequiredElement("keyword-stats"), stats.keywordFrequencies);
 }
 
+function renderOcrToggle(enabled: boolean) {
+  getRequiredElement<HTMLInputElement>("ocr-toggle").checked = enabled;
+  getRequiredElement<HTMLElement>("ocr-status").textContent = enabled ? ocrEnabledStatusText : ocrDisabledStatusText;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   renderPopup(EMPTY_SCAN_STATISTICS, loadingStatusText);
+  renderOcrToggle(false);
 
   const unsubscribe = subscribeScanStatistics((stats) => {
     renderPopup(stats ?? EMPTY_SCAN_STATISTICS, stats ? updatedStatusText : fallbackStatusText);
@@ -213,7 +223,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  getRequiredElement<HTMLInputElement>("ocr-toggle").addEventListener("change", async (event) => {
+    const enabled = (event.currentTarget as HTMLInputElement).checked;
+    renderOcrToggle(enabled);
+
+    try {
+      await writeOcrEnabled(enabled);
+    } catch {
+      renderOcrToggle(!enabled);
+      getRequiredElement<HTMLElement>("ocr-status").textContent = ocrErrorStatusText;
+    }
+  });
+
   try {
+    renderOcrToggle(await readOcrEnabled());
     const storedStats = await readScanStatistics();
     renderPopup(storedStats ?? EMPTY_SCAN_STATISTICS, storedStats ? loadedStatusText : fallbackStatusText);
   } catch {

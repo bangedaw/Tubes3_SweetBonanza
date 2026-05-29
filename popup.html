@@ -277,8 +277,10 @@
         white-space: nowrap;
       }
 
-      input:disabled {
-        cursor: not-allowed;
+      #ocr-status {
+        grid-column: 1 / -1;
+        color: #667085;
+        font-size: 11px;
       }
     </style>
   </head>
@@ -309,9 +311,10 @@
         <h2 id="actions-heading">Kontrol</h2>
         <button id="rescan-button" type="button">Rescan Halaman</button>
         <label>
-          <input id="ocr-toggle" type="checkbox" disabled />
+          <input id="ocr-toggle" type="checkbox" />
           OCR gambar
         </label>
+        <p id="ocr-status">OCR nonaktif.</p>
       </section>
     </main>
 
