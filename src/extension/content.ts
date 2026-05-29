@@ -157,6 +157,19 @@ function persistScanStatistics(statistics: ScanStatistics) {
   });
 }
 
+function resetStatistics() {
+  wordFrequencies.clear();
+  algorithmExecTimes.clear();
+  algorithmMatchCounts.clear();
+  algorithmComparisons.clear();
+  algorithmNames.forEach(algorithm => {
+    algorithmExecTimes.set(algorithm, 0);
+    algorithmMatchCounts.set(algorithm, 0);
+    algorithmComparisons.set(algorithm, 0);
+  }
+  );
+}
+
 function highlightMatches() {
   const walker = document.createTreeWalker(
     document.body,
@@ -240,4 +253,42 @@ function highlightMatches() {
   console.log("Statistik Waktu per algoritma:", Object.fromEntries(algorithmExecTimes));
   persistScanStatistics(buildScanStatistics(totalUniqueMatches));
 }
-highlightMatches();
+performScan();
+
+function clearHighlights() {
+  const highlightedElements = Array.from(document.querySelectorAll(".sweetbonanza-highlighted-word"));
+  if (highlightedElements.length == 0) return;
+
+  const parentToNormalize = new Set<HTMLElement>();
+  for (const mark of highlightedElements) {
+    const parent = mark.parentElement;
+    if (parent) {
+      parentToNormalize.add(parent);
+      const textNode = document.createTextNode(mark.textContent || "");
+      parent.replaceChild(textNode, mark);
+    }
+  }  
+  for (const parent of parentToNormalize) {
+    parent.normalize();
+  }
+  tooltip.style.display = "none";
+}
+
+let isScanning = false;
+
+function performScan() {
+  if (isScanning) return;
+  isScanning = true;
+  try {
+    clearHighlights();
+    resetStatistics();
+    highlightMatches();
+  }
+  catch (error) {
+    console.error("Gagal melakukan scan halaman: ", error);
+  }
+  finally {
+    isScanning = false;
+  }
+
+}
