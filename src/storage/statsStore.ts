@@ -39,6 +39,7 @@ export const EMPTY_SCAN_STATISTICS: ScanStatistics = {
 
 type ChromeStorageLocal = {
   get: (keys: string, callback: (items: Record<string, unknown>) => void) => void;
+  set: (items: Record<string, unknown>, callback?: () => void) => void;
 };
 
 type ChromeRuntime = {
@@ -95,6 +96,27 @@ export function readScanStatistics(): Promise<ScanStatistics | null> {
 
       const storedValue = items[SCAN_STATISTICS_STORAGE_KEY];
       resolve(isScanStatistics(storedValue) ? storedValue : null);
+    });
+  });
+}
+
+export function writeScanStatistics(statistics: ScanStatistics): Promise<void> {
+  const chromeApi = getChromeApi();
+  const storage = chromeApi?.storage?.local;
+
+  if (!storage) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    storage.set({ [SCAN_STATISTICS_STORAGE_KEY]: statistics }, () => {
+      const errorMessage = chromeApi?.runtime?.lastError?.message;
+      if (errorMessage) {
+        reject(new Error(errorMessage));
+        return;
+      }
+
+      resolve();
     });
   });
 }

@@ -2,7 +2,9 @@ import { searchBoyerMoore } from "../algorithms/boyerMoore";
 import { searchKMP } from "../algorithms/kmp"
 import { searchRegex } from "../algorithms/RegexMatcher";
 import { searchWeightedLevenshtein } from "../algorithms/weightedLevenshtein";
-import type { AlgorithmResult, MatchResult } from "../types/match";
+import { writeScanStatistics } from "../storage/statsStore";
+import type { AlgorithmResult, AlgorithmName, MatchResult } from "../types/match";
+import type { ScanAlgorithmSummary, ScanStatistics } from "../storage/statsStore";
 import keywordsRaw from "../../keywords/keywords.txt?raw";
 
 const keywords: string[] = keywordsRaw
@@ -11,11 +13,13 @@ const keywords: string[] = keywordsRaw
 .filter(Boolean);
 
 // frek global
+const algorithmNames: AlgorithmName[] = ["Boyer-Moore", "KMP", "Regex", "Weighted-Levenshtein"];
 const wordFrequencies = new Map<string, number>();
-const algorithmExecTimes = new Map<string, number>();
-const algorithmMatchCounts = new Map<string, number>();
+const algorithmExecTimes = new Map<AlgorithmName, number>();
+const algorithmMatchCounts = new Map<AlgorithmName, number>();
+const algorithmComparisons = new Map<AlgorithmName, number>();
 
-["Boyer-Moore", "KMP", "Regex", "Weighted-Levenshtein"].forEach(algo => {
+algorithmNames.forEach(algo => {
     algorithmExecTimes.set(algo, 0);
     algorithmMatchCounts.set(algo, 0);
 });
@@ -43,6 +47,11 @@ function handleMultipleAlgorithms(text: string, results: AlgorithmResult[], node
         
         const currentMatchCount = algorithmMatchCounts.get(res.algorithm) || 0;
         algorithmMatchCounts.set(res.algorithm, currentMatchCount + res.matches.length);
+
+        if (typeof res.stats.comparisons === "number") {
+          const currentComparisons = algorithmComparisons.get(res.algorithm) || 0;
+          algorithmComparisons.set(res.algorithm, currentComparisons + res.stats.comparisons);
+        }
 
         for (const m of res.matches) {
             allMatches.push({ ...m, algorithms: new Set([res.algorithm]) });
@@ -112,6 +121,40 @@ function handleMultipleAlgorithms(text: string, results: AlgorithmResult[], node
       node.parentNode?.replaceChild(fragment, node);
     }
     return localMatchCount;
+}
+
+function buildAlgorithmSummary(algorithm: AlgorithmName): ScanAlgorithmSummary {
+  const summary: ScanAlgorithmSummary = {
+    algorithm,
+    matchCount: algorithmMatchCounts.get(algorithm) || 0,
+    executionTimeMs: algorithmExecTimes.get(algorithm) || 0,
+  };
+
+  const comparisons = algorithmComparisons.get(algorithm);
+  if (typeof comparisons === "number") {
+    summary.comparisons = comparisons;
+  }
+
+  return summary;
+}
+
+function buildScanStatistics(totalMatches: number): ScanStatistics {
+  return {
+    totalMatches,
+    keywordFrequencies: Array.from(wordFrequencies.entries())
+      .map(([keyword, count]) => ({ keyword, count }))
+      .sort((first, second) => second.count - first.count),
+    algorithms: algorithmNames.map(buildAlgorithmSummary),
+    scannedAt: new Date().toISOString(),
+    pageUrl: window.location.href,
+    pageTitle: document.title,
+  };
+}
+
+function persistScanStatistics(statistics: ScanStatistics) {
+  writeScanStatistics(statistics).catch((error) => {
+    console.error("Gagal menyimpan statistik scan:", error);
+  });
 }
 
 function highlightMatches() {
@@ -195,6 +238,6 @@ function highlightMatches() {
 
   console.log(`Pencarian selesai. Ditemukan ${totalUniqueMatches} kata unik.`);
   console.log("Statistik Waktu per algoritma:", Object.fromEntries(algorithmExecTimes));
+  persistScanStatistics(buildScanStatistics(totalUniqueMatches));
 }
 highlightMatches();
-
