@@ -77,6 +77,19 @@ Jika extension baru saja di-reload, refresh tab halaman target agar content scri
 - Refresh popup saat data statistik berubah.
 - Toggle status OCR gambar tersimpan di storage.
 
+## Ringkasan Algoritma
+
+Extension menggunakan beberapa pendekatan pencocokan string.
+
+| Algoritma | Fungsi | Sumber Pattern |
+|---|---|---|
+| Knuth-Morris-Pratt | Exact matching keyword dasar dengan LPS/failure table. | `keywords/keywords.txt` |
+| Boyer-Moore | Exact matching alternatif dengan last occurrence table dan shifting dari kanan ke kiri. | `keywords/keywords.txt` |
+| RegEx | Mendeteksi pola kata yang langsung diikuti angka, misalnya `SLOT99` atau `MAXWIN234`. | Pattern di source code |
+| Weighted Levenshtein | Fuzzy matching untuk variasi manipulatif seperti `H0KI88`, `M4XWIN`, atau `Gαcor999`. | `keywords/keywords.txt` |
+
+KMP dan Boyer-Moore membaca daftar keyword secara iteratif dari `keywords.txt`. RegEx menggunakan regex engine JavaScript sesuai spesifikasi. Weighted Levenshtein memakai bobot substitusi lebih kecil untuk karakter yang mirip secara visual, seperti `o` dengan `0`, `a` dengan `4`, dan `a` dengan `α`.
+
 ## Struktur Project
 
 ```txt
