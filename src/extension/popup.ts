@@ -1,5 +1,5 @@
 import { EMPTY_SCAN_STATISTICS, readScanStatistics, subscribeScanStatistics } from "../storage/statsStore";
-import { readOcrEnabled, writeOcrEnabled } from "../storage/settingsStore";
+import { readBlurEnabled, readOcrEnabled, writeBlurEnabled, writeOcrEnabled } from "../storage/settingsStore";
 import type { KeywordFrequency, ScanAlgorithmSummary, ScanStatistics } from "../storage/statsStore";
 
 const fallbackStatusText = "Belum ada hasil scan realtime. Data akan muncul setelah integrasi storage.";
@@ -10,9 +10,12 @@ const updatedStatusText = "Statistik scan terbaru diterima.";
 const rescanRequestStatusText = "Meminta content script melakukan rescan...";
 const rescanSentStatusText = "Permintaan rescan sudah dikirim ke halaman aktif.";
 const rescanUnavailableStatusText = "Rescan belum tersedia pada halaman aktif.";
-const ocrEnabledStatusText = "OCR aktif. Gambar akan diproses setelah modul OCR tersedia.";
+const ocrEnabledStatusText = "OCR aktif. Gambar visible akan diproses.";
 const ocrDisabledStatusText = "OCR nonaktif.";
 const ocrErrorStatusText = "Status OCR belum dapat disimpan.";
+const blurEnabledStatusText = "Blur teks aktif untuk hasil deteksi.";
+const blurDisabledStatusText = "Blur teks nonaktif.";
+const blurErrorStatusText = "Status blur belum dapat disimpan.";
 
 type ActiveTab = {
   id?: number;
@@ -119,7 +122,7 @@ function renderAlgorithmStats(container: HTMLElement, algorithms: ScanAlgorithmS
     comparisonMetric.className = "algorithm-metric";
 
     const comparisonLabel = document.createElement("span");
-    comparisonLabel.textContent = "Comparison";
+    comparisonLabel.textContent = algorithm.algorithm === "OCR" ? "Input" : "Comparison";
 
     const comparisonValue = document.createElement("strong");
     comparisonValue.textContent =
@@ -258,9 +261,15 @@ function renderOcrToggle(enabled: boolean) {
   getRequiredElement<HTMLElement>("ocr-status").textContent = enabled ? ocrEnabledStatusText : ocrDisabledStatusText;
 }
 
+function renderBlurToggle(enabled: boolean) {
+  getRequiredElement<HTMLInputElement>("blur-toggle").checked = enabled;
+  getRequiredElement<HTMLElement>("blur-status").textContent = enabled ? blurEnabledStatusText : blurDisabledStatusText;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   renderPopup(EMPTY_SCAN_STATISTICS, loadingStatusText);
   renderOcrToggle(false);
+  renderBlurToggle(false);
 
   const unsubscribe = subscribeScanStatistics((stats) => {
     renderPopup(stats ?? EMPTY_SCAN_STATISTICS, stats ? updatedStatusText : fallbackStatusText);
@@ -290,8 +299,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  getRequiredElement<HTMLInputElement>("blur-toggle").addEventListener("change", async (event) => {
+    const enabled = (event.currentTarget as HTMLInputElement).checked;
+    renderBlurToggle(enabled);
+
+    try {
+      await writeBlurEnabled(enabled);
+    } catch {
+      renderBlurToggle(!enabled);
+      getRequiredElement<HTMLElement>("blur-status").textContent = blurErrorStatusText;
+    }
+  });
+
   try {
     renderOcrToggle(await readOcrEnabled());
+    renderBlurToggle(await readBlurEnabled());
     const storedStats = await readScanStatistics();
     renderPopup(storedStats ?? EMPTY_SCAN_STATISTICS, storedStats ? loadedStatusText : fallbackStatusText);
   } catch {

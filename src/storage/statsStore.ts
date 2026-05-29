@@ -34,6 +34,7 @@ export const EMPTY_SCAN_STATISTICS: ScanStatistics = {
     { algorithm: "Boyer-Moore", matchCount: 0, executionTimeMs: 0, comparisons: 0 },
     { algorithm: "Regex", matchCount: 0, executionTimeMs: 0 },
     { algorithm: "Weighted-Levenshtein", matchCount: 0, executionTimeMs: 0 },
+    { algorithm: "OCR", matchCount: 0, executionTimeMs: 0 },
   ],
 };
 
