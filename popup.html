@@ -91,6 +91,35 @@
         line-height: 1;
       }
 
+      #scan-metadata {
+        display: grid;
+        gap: 8px;
+      }
+
+      .metadata-row {
+        display: grid;
+        gap: 2px;
+        padding: 8px;
+        border-radius: 6px;
+        background: #f9fafb;
+      }
+
+      .metadata-label {
+        color: #667085;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .metadata-value {
+        overflow: hidden;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       #algorithm-stats {
         display: grid;
         gap: 8px;
@@ -295,6 +324,11 @@
       <section aria-labelledby="total-heading">
         <h2 id="total-heading">Total Keyword Ditemukan</h2>
         <strong id="total-matches">0</strong>
+      </section>
+
+      <section aria-labelledby="metadata-heading">
+        <h2 id="metadata-heading">Scan Terakhir</h2>
+        <div id="scan-metadata" aria-live="polite"></div>
       </section>
 
       <section aria-labelledby="algorithm-heading">

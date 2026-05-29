@@ -191,9 +191,64 @@ function renderKeywordStats(container: HTMLElement, keywords: KeywordFrequency[]
   container.appendChild(chart);
 }
 
+function getDisplayUrl(pageUrl: string | null): string {
+  if (!pageUrl) {
+    return "-";
+  }
+
+  try {
+    const url = new URL(pageUrl);
+    return url.hostname || pageUrl;
+  } catch {
+    return pageUrl;
+  }
+}
+
+function getDisplayScanTime(scannedAt: string | null): string {
+  if (!scannedAt) {
+    return "-";
+  }
+
+  const scanDate = new Date(scannedAt);
+  if (Number.isNaN(scanDate.getTime())) {
+    return "-";
+  }
+
+  return scanDate.toLocaleString("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function createMetadataRow(label: string, value: string, title = value): HTMLElement {
+  const row = document.createElement("article");
+  row.className = "metadata-row";
+
+  const labelElement = document.createElement("span");
+  labelElement.className = "metadata-label";
+  labelElement.textContent = label;
+
+  const valueElement = document.createElement("span");
+  valueElement.className = "metadata-value";
+  valueElement.textContent = value;
+  valueElement.title = title;
+
+  row.append(labelElement, valueElement);
+  return row;
+}
+
+function renderScanMetadata(container: HTMLElement, stats: ScanStatistics) {
+  container.replaceChildren(
+    createMetadataRow("Halaman", stats.pageTitle || "-", stats.pageTitle || "-"),
+    createMetadataRow("Domain", getDisplayUrl(stats.pageUrl), stats.pageUrl || "-"),
+    createMetadataRow("Waktu", getDisplayScanTime(stats.scannedAt), stats.scannedAt || "-")
+  );
+}
+
 function renderPopup(stats: ScanStatistics, statusText: string) {
   getRequiredElement<HTMLElement>("scan-status").textContent = statusText;
   getRequiredElement<HTMLElement>("total-matches").textContent = String(stats.totalMatches);
+  renderScanMetadata(getRequiredElement("scan-metadata"), stats);
   renderAlgorithmStats(getRequiredElement("algorithm-stats"), stats.algorithms);
   renderKeywordStats(getRequiredElement("keyword-stats"), stats.keywordFrequencies);
 }
