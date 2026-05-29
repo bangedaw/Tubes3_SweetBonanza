@@ -3,7 +3,7 @@
 
   "name": "SweetBonanza Judol Detector",
   "version": "1.0",
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab"],
 
   "action": {
     "default_popup": "popup.html"
