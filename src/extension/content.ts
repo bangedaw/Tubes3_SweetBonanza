@@ -257,7 +257,6 @@ function highlightMatches() {
   console.log("Statistik Waktu per algoritma:", Object.fromEntries(algorithmExecTimes));
   persistScanStatistics(buildScanStatistics(totalUniqueMatches));
 }
-performScan();
 
 function clearHighlights() {
   const highlightedElements = Array.from(document.querySelectorAll(".sweetbonanza-highlighted-word"));
@@ -278,11 +277,61 @@ function clearHighlights() {
   tooltip.style.display = "none";
 }
 
+let mutationObserver: MutationObserver | null = null;
+let debounceTimeout: number | null = null;
+
+function startMutationObserver() {
+  if (mutationObserver) return;
+  mutationObserver = new MutationObserver((mutations) => {
+    let hasValidMutation = false;
+    for (const mutation of mutations) {
+      let isSelfMutation = false;
+      if (mutation.type === "childList") {
+        mutation.addedNodes.forEach(node => {
+          if (node instanceof HTMLElement && (node.classList.contains("sweetbonanza-highlighted-word") || node.querySelector(".sweetbonanza-highlighted-word"))) {
+            isSelfMutation = true;
+          }
+        });
+      }
+      if (!isSelfMutation) {
+        hasValidMutation = true;
+        break;
+      }
+    } 
+    if (hasValidMutation) {
+      if (debounceTimeout !== null) {
+        clearTimeout(debounceTimeout);
+      }
+      debounceTimeout = window.setTimeout(() => {
+        performScan();
+      }, 500);
+    }
+  });
+  mutationObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+}
+
+function stopMutationObserver() {
+  if (mutationObserver) {
+    mutationObserver.disconnect();
+    mutationObserver = null;
+  }
+  if (debounceTimeout !== null) {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = null;
+  }
+}
+
+
 let isScanning = false;
 
 function performScan() {
   if (isScanning) return;
   isScanning = true;
+  stopMutationObserver();
   try {
     clearHighlights();
     resetStatistics();
@@ -293,6 +342,7 @@ function performScan() {
   }
   finally {
     isScanning = false;
+    startMutationObserver();
   }
 }
 
@@ -303,3 +353,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   return true;
 });
+
+performScan();
