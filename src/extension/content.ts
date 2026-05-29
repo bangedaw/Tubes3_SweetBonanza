@@ -3,6 +3,7 @@ import { searchKMP } from "../algorithms/kmp"
 import { searchRegex } from "../algorithms/RegexMatcher";
 import { searchWeightedLevenshtein } from "../algorithms/weightedLevenshtein";
 import { searchAhoCorasick } from "../algorithms/ahoCorasick";
+import { searchRabinKarp } from "../algorithms/rabinKarp";
 import { writeScanStatistics } from "../storage/statsStore";
 import { readBlurEnabled, readOcrEnabled, subscribeBlurEnabled, subscribeOcrEnabled } from "../storage/settingsStore";
 import type { AlgorithmResult, AlgorithmName, MatchResult } from "../types/match";
@@ -16,7 +17,7 @@ const keywords: string[] = keywordsRaw
 .filter(Boolean);
 
 // frek global
-const algorithmNames: AlgorithmName[] = ["Boyer-Moore", "KMP", "Regex", "Weighted-Levenshtein", "Aho-Corasick", "OCR"];
+const algorithmNames: AlgorithmName[] = ["Boyer-Moore", "KMP", "Regex", "Weighted-Levenshtein", "Aho-Corasick", "Rabin-Karp", "OCR"];
 const wordFrequencies = new Map<string, number>();
 const ocrWordFrequencies = new Map<string, number>();
 const algorithmExecTimes = new Map<AlgorithmName, number>();
@@ -473,6 +474,7 @@ function findOcrTextMatches(text: string): MatchResult[] {
     searchRegex(text),
     searchWeightedLevenshtein(text, keywords),
     searchAhoCorasick(text, keywords),
+    searchRabinKarp(text, keywords)
   ]);
 }
 
@@ -828,8 +830,9 @@ function highlightMatches() {
     const rRegex = searchRegex(text);
     const rWL = searchWeightedLevenshtein(text, keywords);
     const rAC = searchAhoCorasick(text, keywords);
+    const rRK = searchRabinKarp(text, keywords);
 
-    const results = [rBM, rKMP, rRegex, rWL, rAC];
+    const results = [rBM, rKMP, rRegex, rWL, rAC, rRK];
     totalUniqueMatches += handleMultipleAlgorithms(text, results, node);
   }
   
