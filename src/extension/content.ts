@@ -1,6 +1,6 @@
 import { searchBoyerMoore } from "../algorithms/boyerMoore";
 import { searchKMP } from "../algorithms/kmp"
-import { searchRegex } from "../algorithms/RegexMatcher";
+import { searchRegex } from "../algorithms/regexMatcher";
 import { searchWeightedLevenshtein } from "../algorithms/weightedLevenshtein";
 import { searchAhoCorasick } from "../algorithms/ahoCorasick";
 import { searchRabinKarp } from "../algorithms/rabinKarp";

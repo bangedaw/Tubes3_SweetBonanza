@@ -22,7 +22,8 @@ class AhoCorasick {
             let current = this.root;
             const lowerKeyword = cleanKeyword.toLowerCase();
 
-            for (const char of lowerKeyword) {
+            for (let i = 0; i < lowerKeyword.length; i++) {
+                const char = lowerKeyword[i];
                 if (!current.children.has(char)) {
                     current.children.set(char, new AhoCorasickNode());
                 }
