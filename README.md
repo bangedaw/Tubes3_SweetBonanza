@@ -1,4 +1,4 @@
-# Tubes3_SweetBonanza
+# Judol Detector - SweetBonanza
 
 Judol Detector adalah Chromium browser extension untuk mendeteksi teks pada halaman web yang mengandung indikasi judi online. Extension membaca text node pada halaman, mencocokkannya dengan keyword dan pola mencurigakan, memberi highlight pada teks yang terdeteksi, menampilkan tooltip, dan menyediakan statistik hasil scan melalui popup.
 
@@ -10,9 +10,9 @@ Judol Detector adalah Chromium browser extension untuk mendeteksi teks pada hala
 
 Versi yang sudah digunakan saat pengembangan:
 
-```bash
-node --version
-npm --version
+```txt
+Node.js v26.2.0
+npm 11.14.1
 ```
 
 ## Instalasi
@@ -39,7 +39,11 @@ dist/
 ├── background.js
 ├── content.js
 ├── popup.html
-└── popup.js
+├── popup.js
+├── tesseract/
+│   └── worker.min.js
+└── tesseract-core/
+    └── tesseract-core*.js/wasm
 ```
 
 ## Load Extension Di Chrome
@@ -78,6 +82,7 @@ Jika extension baru saja di-reload, refresh tab halaman target agar content scri
 - Refresh popup saat data statistik berubah.
 - Tombol rescan halaman dari popup.
 - Dukungan halaman dinamis melalui MutationObserver.
+- Implementasi algoritma bonus Aho-Corasick dan Rabin-Karp.
 - OCR gambar dengan Tesseract.js.
 - Blur gambar dan teks untuk hasil deteksi.
 - Toggle OCR gambar dan blur teks tersimpan di storage.
@@ -92,8 +97,28 @@ Extension menggunakan beberapa pendekatan pencocokan string.
 | Boyer-Moore | Exact matching alternatif dengan last occurrence table dan shifting dari kanan ke kiri. | `keywords/keywords.txt` |
 | RegEx | Mendeteksi pola kata yang langsung diikuti angka, misalnya `SLOT99` atau `MAXWIN234`. | Pattern di source code |
 | Weighted Levenshtein | Fuzzy matching untuk variasi manipulatif seperti `H0KI88`, `M4XWIN`, atau `Gαcor999`. | `keywords/keywords.txt` |
+| Aho-Corasick | Multi-pattern matching bonus dengan trie dan failure link. | `keywords/keywords.txt` |
+| Rabin-Karp | Exact matching bonus berbasis rolling hash. | `keywords/keywords.txt` |
+| OCR | Membaca teks pada gambar visible menggunakan Tesseract.js, lalu mencocokkannya dengan keyword. | `keywords/keywords.txt` |
 
-KMP dan Boyer-Moore membaca daftar keyword secara iteratif dari `keywords.txt`. RegEx menggunakan regex engine JavaScript sesuai spesifikasi. Weighted Levenshtein memakai bobot substitusi lebih kecil untuk karakter yang mirip secara visual, seperti `o` dengan `0`, `a` dengan `4`, dan `a` dengan `α`.
+KMP dan Boyer-Moore membaca daftar keyword secara iteratif dari `keywords.txt`. Pada struktur repository ini, file keyword tersebut berada di `keywords/keywords.txt`. RegEx menggunakan regex engine JavaScript sesuai spesifikasi. Weighted Levenshtein memakai bobot substitusi lebih kecil untuk karakter yang mirip secara visual, seperti `o` dengan `0`, `a` dengan `4`, dan `a` dengan `α`. Aho-Corasick dan Rabin-Karp ditambahkan sebagai fitur bonus untuk memperluas perbandingan algoritma pada popup.
+
+## Checklist Spesifikasi
+
+| No | Poin | Ya | Tidak |
+|---:|---|:---:|:---:|
+| 1 | Extension berhasil di-build dan di-load tanpa kesalahan pada chromium browser dan dikembangkan dengan TypeScript | ✓ |  |
+| 2 | KMP dan Boyer-Moore diimplementasikan from scratch | ✓ |  |
+| 3 | Regex menghandle format `<kata><angka>` dan berbagai edge case | ✓ |  |
+| 4 | Pencarian KMP & BM membaca `keyword.txt` secara iteratif dan tidak menggunakan built-in search function atau library eksternal | ✓ |  |
+| 5 | Exact matching dan fuzzy matching berjalan benar | ✓ |  |
+| 6 | Elemen DOM terdeteksi diberi highlight dan terhapus saat rescanning | ✓ |  |
+| 7 | Tooltip muncul saat hover dengan informasi keyword, algoritma, kemunculan, dan waktu eksekusi | ✓ |  |
+| 8 | Popup menampilkan statistik realtime: total keyword, perbandingan, waktu eksekusi, jumlah match | ✓ |  |
+| 9 | [Bonus] Membuat Video |  | ✓ |
+| 10 | [Bonus] Implementasi Algoritma Aho-Corasick dan Rabin Karp | ✓ |  |
+| 11 | [Bonus] Implementasi Censorship / Blur Teks | ✓ |  |
+| 12 | [Bonus] Implementasi Optical Character Recognition pada Gambar | ✓ |  |
 
 ## Struktur Project
 
@@ -118,7 +143,6 @@ Tubes3_SweetBonanza/
 
 - OCR gambar membutuhkan waktu lebih lama dibanding scan teks dan hasilnya bergantung pada kualitas gambar.
 - Beberapa gambar cross-origin, thumbnail terlalu kecil, atau teks dekoratif dapat gagal dibaca OCR.
-- `npm test` masih berupa placeholder; verifikasi utama dilakukan lewat build dan uji manual di browser.
 
 ## Troubleshooting
 
@@ -130,3 +154,9 @@ Tubes3_SweetBonanza/
 ## Author
 
 Kelompok SweetBonanza.
+
+| NIM | Nama | Pembagian Tugas |
+|:---:|:---|:---|
+| 13524036 | Edward David Rumahorbo | Implementasi OCR, Popup dan Statistik, Dokumentasi pada README |
+| 13524066 | Nathanael Gunawan | Implementasi algoritma KMP, Boyer-Moore, Regex, Weighted Levenshtein Distance |
+| 13524102 | Manuel Thimoty Silalahi | Implementasi Manifest, DOM Walker, Integrasi Algoritma, dan Implementasi Algoritma Bonus |
